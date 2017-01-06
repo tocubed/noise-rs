@@ -31,7 +31,7 @@ fn get_cell_point3<T: Float>(perm_table: &PermutationTable,
                              -> math::Point3<T> {
     let cell_int = math::cast3::<_, i64>(cell);
     let val1 = perm_table.get3(cell_int);
-    let val2 = perm_table.get3([cell_int[0], cell_int[1], cell_int[2] + 128]);
+    let val2 = perm_table.get3([cell_int[0], cell_int[1], (cell_int[2] + 71) * 159]);
     math::add3(cell,
                math::mul3(math::cast3([val1 & 0x0F, (val1 & 0xF0) >> 4, val2 & 0x0F]),
                           math::cast(1.0 / 15.0)))
@@ -43,7 +43,7 @@ fn get_cell_point4<T: Float>(perm_table: &PermutationTable,
                              -> math::Point4<T> {
     let cell_int = math::cast4::<_, i64>(cell);
     let val1 = perm_table.get4(cell_int);
-    let val2 = perm_table.get4([cell_int[0], cell_int[1], cell_int[2], cell_int[3] + 128]);
+    let val2 = perm_table.get4([cell_int[0], cell_int[1], cell_int[2], (cell_int[3] + 71) * 159]);
     math::add4(cell,
                math::mul4(math::cast4([val1 & 0x0F,
                                        (val1 & 0xF0) >> 4,
