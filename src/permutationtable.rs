@@ -29,6 +29,7 @@ const TABLE_SIZE: usize = 256;
 #[derive(Copy)]
 pub struct PermutationTable {
     values: [u8; TABLE_SIZE],
+    mask: u8,
 }
 
 impl Rand for PermutationTable {
@@ -66,7 +67,11 @@ impl Rand for PermutationTable {
         // It's unfortunate that this double-initializes the array, but Rust
         // doesn't currently provide a clean way to do this in one pass. Hopefully
         // it won't matter, as Seed creation will usually be a one-time event.
-        let mut perm_table = PermutationTable { values: [0; TABLE_SIZE] };
+        let mut perm_table = PermutationTable {
+            values: [0; TABLE_SIZE],
+            mask: 0xff
+        };
+
         let seq_it = seq.iter();
         for (x, y) in perm_table.values.iter_mut().zip(seq_it) {
             *x = *y
@@ -93,34 +98,46 @@ impl PermutationTable {
         rng.gen()
     }
 
+    pub fn new_periodic(seed: u32, period: u32) -> PermutationTable {
+        let mut rng: XorShiftRng = SeedableRng::from_seed([1, seed, seed, seed]);
+        let mut perm_table: PermutationTable = rng.gen();
+
+        perm_table.mask = match period {
+            1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | 256 => math::cast(period - 1),
+            _ => panic!("The period must be <= 256 and a power of two.")
+        };
+
+        perm_table
+    }
+
     #[inline(always)]
     pub fn get1<T: Signed + PrimInt + NumCast>(&self, x: T) -> usize {
-        let x: usize = math::cast(x & math::cast(0xff));
+        let x: usize = math::cast(x & math::cast(self.mask));
         self.values[x] as usize
     }
 
     #[inline(always)]
     pub fn get2<T: Signed + PrimInt + NumCast>(&self, pos: math::Point2<T>) -> usize {
-        let y: usize = math::cast(pos[1] & math::cast(0xff));
+        let y: usize = math::cast(pos[1] & math::cast(self.mask));
         self.values[self.get1(pos[0]) ^ y] as usize
     }
 
     #[inline(always)]
     pub fn get3<T: Signed + PrimInt + NumCast>(&self, pos: math::Point3<T>) -> usize {
-        let z: usize = math::cast(pos[2] & math::cast(0xff));
+        let z: usize = math::cast(pos[2] & math::cast(self.mask));
         self.values[self.get2([pos[0], pos[1]]) ^ z] as usize
     }
 
     #[inline(always)]
     pub fn get4<T: Signed + PrimInt + NumCast>(&self, pos: math::Point4<T>) -> usize {
-        let w: usize = math::cast(pos[3] & math::cast(0xff));
+        let w: usize = math::cast(pos[3] & math::cast(self.mask));
         self.values[self.get3([pos[0], pos[1], pos[2]]) ^ w] as usize
     }
 }
 
 impl Clone for PermutationTable {
     fn clone(&self) -> PermutationTable {
-        PermutationTable { values: self.values }
+        PermutationTable { values: self.values, mask: self.mask }
     }
 }
 
