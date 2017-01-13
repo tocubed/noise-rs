@@ -129,6 +129,9 @@ name = "translate_point"
 [[example]]
 name = "turbulence"
 
+[[example]]
+name = "periodic"
+
 [[bench]]
 name = "benches"
 

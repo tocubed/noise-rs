@@ -16,7 +16,7 @@
 //! implement super-complex noise stuff.
 
 use num_traits::{self, Float, NumCast};
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Mul, Sub, Rem};
 
 /// Cast a numeric type without having to unwrap - we don't expect any overflow
 /// errors...
@@ -166,6 +166,22 @@ pub fn mul4<T>(a: Vector4<T>, b: T) -> Vector4<T>
     where T: Copy + Mul<T, Output = T>,
 {
     zip_with4(a, const4(b), Mul::mul)
+}
+
+pub fn mod2<T>(a: Vector2<T>, b: T) -> Vector2<T>
+    where T: Copy + Rem<T, Output = T> + Add<T, Output = T>,
+{
+    zip_with2(a, const2(b), |x, y| (x % y + y) % y)
+}
+pub fn mod3<T>(a: Vector3<T>, b: T) -> Vector3<T>
+    where T: Copy + Rem<T, Output = T> + Add<T, Output = T>,
+{
+    zip_with3(a, const3(b), |x, y| (x % y + y) % y)
+}
+pub fn mod4<T>(a: Vector4<T>, b: T) -> Vector4<T>
+    where T: Copy + Rem<T, Output = T> + Add<T, Output = T>,
+{
+    zip_with4(a, const4(b), |x, y| (x % y + y) % y)
 }
 
 pub fn dot2<T: Float>(a: Vector2<T>, b: Vector2<T>) -> T {

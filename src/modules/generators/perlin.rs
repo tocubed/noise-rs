@@ -17,15 +17,50 @@ use math;
 use math::{Point2, Point3, Point4};
 use {NoiseModule, PermutationTable, gradient};
 
+/// Default noise seed for the Perlin noise module.
+pub const DEFAULT_PERLIN_SEED: usize = 0;
+/// Default period for the Perlin noise module.
+pub const DEFAULT_PERLIN_PERIOD: usize = 256;
+
 /// Noise module that outputs 2/3/4-dimensional Perlin noise.
 #[derive(Clone, Copy, Debug)]
 pub struct Perlin {
     perm_table: PermutationTable,
+
+    /// Seed.
+    pub seed: usize,
+
+    /// Extent at which the noise grid wraps around, yielding
+    /// seamlessly periodic noise in all dimensions.
+    pub period: usize,
+
+    enable_period: bool,
 }
 
 impl Perlin {
-    pub fn new(seed: usize) -> Perlin {
-        Perlin { perm_table: PermutationTable::new(seed as u32) }
+    pub fn new() -> Perlin {
+        Perlin {
+            perm_table: PermutationTable::new(DEFAULT_PERLIN_SEED as u32),
+            seed: DEFAULT_PERLIN_SEED,
+            period: DEFAULT_PERLIN_PERIOD,
+            enable_period: false,
+        }
+    }
+
+    pub fn set_seed(self, seed: usize) -> Perlin {
+        Perlin {
+            perm_table: PermutationTable::new(seed as u32),
+            seed: seed,
+            ..self
+        }
+    }
+
+    pub fn set_period(self, period: usize) -> Perlin {
+        Perlin {
+            period: period,
+            enable_period: true,
+            ..self
+        }
     }
 }
 
@@ -48,10 +83,20 @@ impl<T: Float> NoiseModule<Point2<T>> for Perlin {
         }
 
         let floored = math::map2(point, T::floor);
-        let near_corner = math::map2(floored, math::cast);
-        let far_corner = math::add2(near_corner, math::one2());
         let near_distance = math::sub2(point, floored);
         let far_distance = math::sub2(near_distance, math::one2());
+
+        let (near_corner, far_corner) = if self.enable_period {
+            let near = math::map2(floored, math::cast);
+            let near = math::mod2(near, math::cast(self.period));
+            let far = math::add2(near, math::one2());
+            let far = math::mod2(far, math::cast(self.period));
+            (near, far)
+        } else {
+            let near = math::map2(floored, math::cast);
+            let far = math::add2(near, math::one2());
+            (near, far)
+        };
 
         let f00 = surflet(&self.perm_table,
                           [near_corner[0], near_corner[1]],
@@ -90,10 +135,20 @@ impl<T: Float> NoiseModule<Point3<T>> for Perlin {
         }
 
         let floored = math::map3(point, T::floor);
-        let near_corner = math::map3(floored, math::cast);
-        let far_corner = math::add3(near_corner, math::one3());
         let near_distance = math::sub3(point, floored);
         let far_distance = math::sub3(near_distance, math::one3());
+
+        let (near_corner, far_corner) = if self.enable_period {
+            let near = math::map3(floored, math::cast);
+            let near = math::mod3(near, math::cast(self.period));
+            let far = math::add3(near, math::one3());
+            let far = math::mod3(far, math::cast(self.period));
+            (near, far)
+        } else {
+            let near = math::map3(floored, math::cast);
+            let far = math::add3(near, math::one3());
+            (near, far)
+        };
 
         let f000 = surflet(&self.perm_table,
                            [near_corner[0], near_corner[1], near_corner[2]],
@@ -144,10 +199,20 @@ impl<T: Float> NoiseModule<Point4<T>> for Perlin {
         }
 
         let floored = math::map4(point, T::floor);
-        let near_corner = math::map4(floored, math::cast);
-        let far_corner = math::add4(near_corner, math::one4());
         let near_distance = math::sub4(point, floored);
         let far_distance = math::sub4(near_distance, math::one4());
+
+        let (near_corner, far_corner) = if self.enable_period {
+            let near = math::map4(floored, math::cast);
+            let near = math::mod4(near, math::cast(self.period));
+            let far = math::add4(near, math::one4());
+            let far = math::mod4(far, math::cast(self.period));
+            (near, far)
+        } else {
+            let near = math::map4(floored, math::cast);
+            let far = math::add4(near, math::one4());
+            (near, far)
+        };
 
         let f0000 =
             surflet(&self.perm_table,

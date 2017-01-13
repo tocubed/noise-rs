@@ -24,12 +24,23 @@ mod fbm;
 mod hybridmulti;
 mod ridgedmulti;
 
+use math;
+use num_traits::Float;
 use modules::Perlin;
 
 fn build_sources(seed: usize, octaves: usize) -> Vec<Perlin> {
     let mut sources = Vec::with_capacity(octaves);
     for x in 0..octaves {
-        sources.push(Perlin::new(seed + x));
+        sources.push(Perlin::new().set_seed(seed + x));
+    }
+    sources
+}
+
+fn build_sources_periodic<T: Float>(seed: usize, octaves: usize, mut period: usize, lacunarity: T) -> Vec<Perlin> {
+    let mut sources = Vec::with_capacity(octaves);
+    for x in 0..octaves {
+        sources.push(Perlin::new().set_seed(seed + x).set_period(period));
+        period = math::cast(math::cast::<usize, T>(period) * lacunarity);
     }
     sources
 }

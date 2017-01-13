@@ -30,6 +30,8 @@ pub const DEFAULT_RIDGED_LACUNARITY: f32 = 2.0;
 pub const DEFAULT_RIDGED_PERSISTENCE: f32 = 1.0;
 /// Default gain for the RidgedMulti noise module.
 pub const DEFAULT_RIDGED_GAIN: f32 = 2.0;
+/// Default period for the RidgedMulti noise module.
+pub const DEFAULT_RIDGED_PERIOD: usize = 256;
 /// Maximum number of octaves for the RidgedMulti noise module.
 pub const RIDGED_MAX_OCTAVES: usize = 32;
 
@@ -85,6 +87,12 @@ pub struct RidgedMulti<T> {
     /// The gain to apply to the weight on each octave.
     pub gain: T,
 
+    /// Extent at which the noise grid wraps around, yielding
+    /// seamlessly periodic noise in all dimensions.
+    pub period: usize,
+
+    enable_period: bool,
+
     sources: Vec<Perlin>,
 }
 
@@ -97,6 +105,8 @@ impl<T: Float> RidgedMulti<T> {
             lacunarity: math::cast(DEFAULT_RIDGED_LACUNARITY),
             persistence: math::cast(DEFAULT_RIDGED_PERSISTENCE),
             gain: math::cast(DEFAULT_RIDGED_GAIN),
+            period: DEFAULT_RIDGED_PERIOD,
+            enable_period: false,
             sources: super::build_sources(DEFAULT_RIDGED_SEED, DEFAULT_RIDGED_OCTAVE_COUNT),
         }
     }
@@ -105,10 +115,18 @@ impl<T: Float> RidgedMulti<T> {
         if self.seed == seed {
             return self;
         }
-        RidgedMulti {
-            seed: seed,
-            sources: super::build_sources(seed, self.octaves),
-            ..self
+        if !self.enable_period {
+            RidgedMulti {
+                seed: seed,
+                sources: super::build_sources(seed, self.octaves),
+                ..self
+            }
+        } else {
+            RidgedMulti {
+                seed: seed,
+                sources: super::build_sources_periodic(seed, self.octaves, self.period, self.lacunarity),
+                ..self
+            }
         }
     }
 
@@ -120,10 +138,18 @@ impl<T: Float> RidgedMulti<T> {
         } else if octaves < 1 {
             octaves = 1;
         }
-        RidgedMulti {
-            octaves: octaves,
-            sources: super::build_sources(self.seed, octaves),
-            ..self
+        if !self.enable_period {
+            RidgedMulti {
+                octaves: octaves,
+                sources: super::build_sources(self.seed, octaves),
+                ..self
+            }
+        } else {
+            RidgedMulti {
+                octaves: octaves,
+                sources: super::build_sources_periodic(self.seed, octaves, self.period, self.lacunarity),
+                ..self
+            }
         }
     }
 
@@ -132,7 +158,24 @@ impl<T: Float> RidgedMulti<T> {
     }
 
     pub fn set_lacunarity(self, lacunarity: T) -> RidgedMulti<T> {
-        RidgedMulti { lacunarity: lacunarity, ..self }
+        if !self.enable_period {
+            RidgedMulti { lacunarity: lacunarity, ..self }
+        } else {
+            RidgedMulti {
+                lacunarity: lacunarity,
+                sources: super::build_sources_periodic(self.seed, self.octaves, self.period, lacunarity),
+                ..self
+            }
+        }
+    }
+
+    pub fn set_period(self, period: usize) -> RidgedMulti<T> {
+        RidgedMulti {
+            period: period,
+            enable_period: true,
+            sources: super::build_sources_periodic(self.seed, self.octaves, period, self.lacunarity),
+            ..self
+        }
     }
 
     pub fn set_persistence(self, persistence: T) -> RidgedMulti<T> {

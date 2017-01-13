@@ -102,6 +102,16 @@ impl<Source, T> Turbulence<Source, T>
             ..self
         }
     }
+
+    pub fn set_period(self, period: usize) -> Turbulence<Source, T> {
+        Turbulence {
+            x_distort_module: self.x_distort_module.set_period(period),
+            y_distort_module: self.y_distort_module.set_period(period),
+            z_distort_module: self.z_distort_module.set_period(period),
+            u_distort_module: self.u_distort_module.set_period(period),
+            ..self
+        }
+    }
 }
 
 impl<Source, T> NoiseModule<Point2<T>> for Turbulence<Source, T>
