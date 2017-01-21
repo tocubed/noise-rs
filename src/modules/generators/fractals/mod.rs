@@ -36,11 +36,15 @@ fn build_sources(seed: usize, octaves: usize) -> Vec<Perlin> {
     sources
 }
 
-fn build_sources_periodic<T: Float>(seed: usize, octaves: usize, mut period: usize, lacunarity: T) -> Vec<Perlin> {
+fn build_sources_periodic<T: Float>(seed: usize,
+                                    octaves: usize,
+                                    mut period: [usize; 4],
+                                    lacunarity: T)
+                                    -> Vec<Perlin> {
     let mut sources = Vec::with_capacity(octaves);
     for x in 0..octaves {
         sources.push(Perlin::new().set_seed(seed + x).set_period(period));
-        period = math::cast(math::cast::<usize, T>(period) * lacunarity);
+        period = math::cast4(math::mul4(math::cast4(period), lacunarity));
     }
     sources
 }

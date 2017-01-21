@@ -29,7 +29,7 @@ pub const DEFAULT_FBM_LACUNARITY: f32 = 2.0;
 // Default Hurst exponent for the fBm noise module
 pub const DEFAULT_FBM_PERSISTENCE: f32 = 0.5;
 // Default period for the fBm noise module.
-pub const DEFAULT_FBM_PERIOD: usize = 256;
+pub const DEFAULT_FBM_PERIOD: [usize; 4] = [256, 256, 256, 256];
 // Maximum number of octaves for the fBm noise module.
 pub const FBM_MAX_OCTAVES: usize = 32;
 
@@ -82,7 +82,7 @@ pub struct Fbm<T> {
 
     /// Extent at which the noise grid wraps around, yielding
     /// seamlessly periodic noise in all dimensions.
-    pub period: usize,
+    pub period: [usize; 4],
 
     enable_period: bool,
 
@@ -116,7 +116,10 @@ impl<T: Float> Fbm<T> {
         } else {
             Fbm {
                 seed: seed,
-                sources: super::build_sources_periodic(seed, self.octaves, self.period, self.lacunarity),
+                sources: super::build_sources_periodic(seed,
+                                                       self.octaves,
+                                                       self.period,
+                                                       self.lacunarity),
                 ..self
             }
         }
@@ -140,7 +143,10 @@ impl<T: Float> Fbm<T> {
         } else {
             Fbm {
                 octaves: octaves,
-                sources: super::build_sources_periodic(self.seed, octaves, self.period, self.lacunarity),
+                sources: super::build_sources_periodic(self.seed,
+                                                       octaves,
+                                                       self.period,
+                                                       self.lacunarity),
                 ..self
             }
         }
@@ -156,7 +162,10 @@ impl<T: Float> Fbm<T> {
         } else {
             Fbm {
                 lacunarity: lacunarity,
-                sources: super::build_sources_periodic(self.seed, self.octaves, self.period, lacunarity),
+                sources: super::build_sources_periodic(self.seed,
+                                                       self.octaves,
+                                                       self.period,
+                                                       lacunarity),
                 ..self
             }
         }
@@ -166,11 +175,14 @@ impl<T: Float> Fbm<T> {
         Fbm { persistence: persistence, ..self }
     }
 
-    pub fn set_period(self, period: usize) -> Fbm<T> {
+    pub fn set_period(self, period: [usize; 4]) -> Fbm<T> {
         Fbm {
             period: period,
             enable_period: true,
-            sources: super::build_sources_periodic(self.seed, self.octaves, period, self.lacunarity),
+            sources: super::build_sources_periodic(self.seed,
+                                                   self.octaves,
+                                                   period,
+                                                   self.lacunarity),
             ..self
         }
     }

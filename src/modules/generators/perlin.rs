@@ -20,7 +20,7 @@ use {NoiseModule, PermutationTable, gradient};
 /// Default noise seed for the Perlin noise module.
 pub const DEFAULT_PERLIN_SEED: usize = 0;
 /// Default period for the Perlin noise module.
-pub const DEFAULT_PERLIN_PERIOD: usize = 256;
+pub const DEFAULT_PERLIN_PERIOD: [usize; 4] = [256, 256, 256, 256];
 
 /// Noise module that outputs 2/3/4-dimensional Perlin noise.
 #[derive(Clone, Copy, Debug)]
@@ -30,9 +30,9 @@ pub struct Perlin {
     /// Seed.
     pub seed: usize,
 
-    /// Extent at which the noise grid wraps around, yielding
-    /// seamlessly periodic noise in all dimensions.
-    pub period: usize,
+    /// Distance at which the noise grid wraps around in each
+    /// dimensions, yielding periodic noise.
+    pub period: [usize; 4],
 
     enable_period: bool,
 }
@@ -55,7 +55,7 @@ impl Perlin {
         }
     }
 
-    pub fn set_period(self, period: usize) -> Perlin {
+    pub fn set_period(self, period: [usize; 4]) -> Perlin {
         Perlin {
             period: period,
             enable_period: true,
@@ -87,10 +87,11 @@ impl<T: Float> NoiseModule<Point2<T>> for Perlin {
         let far_distance = math::sub2(near_distance, math::one2());
 
         let (near_corner, far_corner) = if self.enable_period {
+            let period = math::cast2([self.period[0], self.period[1]]);
             let near = math::map2(floored, math::cast);
-            let near = math::mod2(near, math::cast(self.period));
+            let near = math::mod2(near, period);
             let far = math::add2(near, math::one2());
-            let far = math::mod2(far, math::cast(self.period));
+            let far = math::mod2(far, period);
             (near, far)
         } else {
             let near = math::map2(floored, math::cast);
@@ -139,10 +140,11 @@ impl<T: Float> NoiseModule<Point3<T>> for Perlin {
         let far_distance = math::sub3(near_distance, math::one3());
 
         let (near_corner, far_corner) = if self.enable_period {
+            let period = math::cast3([self.period[0], self.period[1], self.period[2]]);
             let near = math::map3(floored, math::cast);
-            let near = math::mod3(near, math::cast(self.period));
+            let near = math::mod3(near, period);
             let far = math::add3(near, math::one3());
-            let far = math::mod3(far, math::cast(self.period));
+            let far = math::mod3(far, period);
             (near, far)
         } else {
             let near = math::map3(floored, math::cast);
@@ -203,10 +205,11 @@ impl<T: Float> NoiseModule<Point4<T>> for Perlin {
         let far_distance = math::sub4(near_distance, math::one4());
 
         let (near_corner, far_corner) = if self.enable_period {
+            let period = math::cast4([self.period[0], self.period[1], self.period[2], self.period[3]]);
             let near = math::map4(floored, math::cast);
-            let near = math::mod4(near, math::cast(self.period));
+            let near = math::mod4(near, period);
             let far = math::add4(near, math::one4());
-            let far = math::mod4(far, math::cast(self.period));
+            let far = math::mod4(far, period);
             (near, far)
         } else {
             let near = math::map4(floored, math::cast);

@@ -103,7 +103,7 @@ impl<Source, T> Turbulence<Source, T>
         }
     }
 
-    pub fn set_period(self, period: usize) -> Turbulence<Source, T> {
+    pub fn set_period(self, period: [usize; 4]) -> Turbulence<Source, T> {
         Turbulence {
             x_distort_module: self.x_distort_module.set_period(period),
             y_distort_module: self.y_distort_module.set_period(period),

@@ -19,10 +19,12 @@ use noise::modules::{Add, Perlin, RidgedMulti, Turbulence};
 mod debug;
 
 fn main() {
-    let ridged = RidgedMulti::new().set_period(7);
-    let turbulence = Turbulence::new(ridged).set_period(7);
+    let period = [9, 2, 8, 8];
 
-    let perlin = Perlin::new().set_period(7);
+    let ridged = RidgedMulti::new().set_period(period);
+    let turbulence = Turbulence::new(ridged).set_period(period);
+
+    let perlin = Perlin::new().set_period(period);
 
     let result = Add::new(turbulence, perlin);
 
